@@ -1,3 +1,4 @@
+import events.Admin;
 import events.Basic;
 import events.Hello;
 import events.Staff;
@@ -20,6 +21,7 @@ public class Bot {
         jda.addEventListener(new Hello());
         jda.addEventListener(new Basic());
         jda.addEventListener(new Staff());
+        jda.addEventListener(new Admin());
 
 
 

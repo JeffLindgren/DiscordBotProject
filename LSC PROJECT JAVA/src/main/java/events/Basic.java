@@ -182,6 +182,58 @@ public class Basic extends ListenerAdapter
 
 
 
+        if (msg[0].equalsIgnoreCase("!gif")) {
+
+            int magic = (int) Math.ceil(Math.random() * 10);
+            String x;
+            switch (magic) {
+                case 1:
+                    x = "https://media.giphy.com/media/tXL4FHPSnVJ0A/giphy.gif";
+                    break;
+                case 2:
+                    x = "https://media.giphy.com/media/26n6xBpxNXExDfuKc/giphy.gif";
+                    break;
+                case 3:
+                    x = "https://media.giphy.com/media/tn1cGqW0xWyfm/giphy.gif";
+                    break;
+                case 4:
+                    x = "https://media.giphy.com/media/DeIdA4WRBi1Ta/giphy.gif";
+                    break;
+                case 5:
+                    x = "https://media.giphy.com/media/q3XzdvHpr0GPK/giphy-downsized-large.gif";
+                    break;
+                case 6:
+                    x = "https://media.giphy.com/media/aeOE9ziteyk6c/giphy.gif";
+                    break;
+                case 7:
+                    x = "https://media.giphy.com/media/aAjB8sanqY3eM/giphy-downsized-large.gif";
+                    break;
+                case 8:
+                    x = "https://media.giphy.com/media/6CKwe5zXeRwyI/giphy-downsized-large.gif";
+                    break;
+                case 9:
+                    x = "https://media.giphy.com/media/6FTee2VeZ8sak/giphy.gif";
+                    break;
+                case 10:
+                    x = "https://media.giphy.com/media/aC28QCnj1HClW/giphy.gif";
+                    break;
+
+                default:
+                    x = "https://media.giphy.com/media/4lLJIF1el6KWs/giphy.gif";
+                    break;
+
+                    //I will add more next week.
+            }
+
+
+            event.getChannel().sendMessage(x).queue();
+
+
+
+        }
+
+
+
         if (msg[0].equalsIgnoreCase("!help"))
         {
             EmbedBuilder embed = new EmbedBuilder()
@@ -211,6 +263,7 @@ public class Basic extends ListenerAdapter
                 test = ((Guild) guild).getMember(event.getMember().getUser());
             }
             String NAME = test.getEffectiveName();
+
             String TAG = test.getUser().getName() + "#" + test.getUser().getDiscriminator();
             String ID = test.getUser().getId();
             String STATUS = test.getOnlineStatus().getKey();
@@ -218,7 +271,7 @@ public class Basic extends ListenerAdapter
             String GAME;
             String AVATAR = test.getUser().getAvatarUrl();
             String GUILDDATE = test.getTimeJoined().format(DateTimeFormatter.RFC_1123_DATE_TIME);
-            String JOINDATE = test.getUser().getTimeCreated().format(DateTimeFormatter.RFC_1123_DATE_TIME);
+            //String JOINDATE = test.getUser().getTimeCreated().format(DateTimeFormatter.RFC_1123_DATE_TIME);
 
 
             if (AVATAR == null) {
@@ -243,10 +296,10 @@ public class Basic extends ListenerAdapter
                     .addField("User id", ID, false)
                     .addField("Current status", STATUS, false)
                     //.addField("Current game", GAME, false)
-                    .addField("Guild joined", GUILDDATE, false)
-                    .addField("Roles", ROLES, false)
-                    .addField("Dicord joined", JOINDATE, false)
-                    .addField("Avatar url", AVATAR, false);
+                    //.addField("Guild joined", GUILDDATE, false)
+                    .addField("Roles", ROLES, false);
+                    //.addField("Dicord joined", JOINDATE, false)
+                    //.addField("Avatar url", AVATAR, false);
 
             if (AVATAR != "No avatar") {
                 embed.setThumbnail(AVATAR);
@@ -273,8 +326,8 @@ public class Basic extends ListenerAdapter
         Guild guild = event.getGuild();
         int serverSize = event.getGuild().getMembers().size();
 
-        event.getJDA().getTextChannelById("560528741626019840").sendMessage("Member `@" + event.getMember().getEffectiveName() + "` has left " + guild.getName() + ".").queue();
-        event.getJDA().getTextChannelById("560528741626019840").sendMessage("We now have '" + serverSize + "' members").queue();
+        event.getJDA().getTextChannelById("560528741626019840").sendMessage("Member " + event.getMember().getAsMention() + " has left " + guild.getName() + ".").queue();
+        event.getJDA().getTextChannelById("560528741626019840").sendMessage("We now have **" + serverSize + "** members").queue();
     }
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         JDA jda = event.getJDA();
@@ -283,9 +336,14 @@ public class Basic extends ListenerAdapter
         Member member = event.getMember();
         Guild guild = event.getGuild();
         int serverSize = event.getGuild().getMembers().size();
+        long userID = member.getUser().getIdLong();
+        Member mem = event.getGuild().getMemberById(userID);
+        Role role = event.getGuild().getRolesByName("MEMBER", true).get(0);
 
-        event.getJDA().getTextChannelById("560528741626019840").sendMessage("Member `@" + event.getMember().getEffectiveName() + "` has joined " + guild.getName() + ".").queue();
+        event.getGuild().getController().addSingleRoleToMember(mem, role).queue();
+
+        event.getJDA().getTextChannelById("560528741626019840").sendMessage("Member " + event.getMember().getAsMention() + " has joined " + guild.getName() + ".\n" + "We now have **" + serverSize + "** members").queue();
         //guild.getPublicChannel().sendMessage("Member `" + member.getEffectiveName() + "` has joined " + guild.getName() + ".").queue();
-        event.getJDA().getTextChannelById("560528741626019840").sendMessage("We now have '" + serverSize + "' members");
+        //event.getJDA().getTextChannelById("560528741626019840").sendMessage("We now have **" + serverSize + "** members").queue();
     }
 }
