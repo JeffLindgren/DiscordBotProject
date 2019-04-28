@@ -29,10 +29,6 @@ public class Staff extends ListenerAdapter
         String unbanMessage = "The ban hammer has been lifted on: " + event.getUser().getAsMention();
         event.getJDA().getTextChannelById("562312040287305885").sendMessage(unbanMessage).queue();
     }
-
-
-
-
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         String[] msg = event.getMessage().getContentRaw().split(" ");
         Member member = event.getMember();
@@ -41,9 +37,6 @@ public class Staff extends ListenerAdapter
 
         if (event.getMember().hasPermission(Permission.KICK_MEMBERS))
         {
-
-
-
             if (msg[0].equalsIgnoreCase("!clear")) {
                 MessageHistory history = event.getChannel().getHistory();
                 List<Message> msgs;
@@ -72,11 +65,6 @@ public class Staff extends ListenerAdapter
 
                     }
                 }
-
-
-
-
-
             }
 
             if (msg[0].equalsIgnoreCase("!staff")) {
@@ -92,18 +80,7 @@ public class Staff extends ListenerAdapter
 
                     event.getChannel().sendMessage(Arrays.toString(test1.toArray())).queue();
                 }
-
-
-
             }
-
-            if (msg[0].equalsIgnoreCase("!lock")) {
-                //event.getChannel().
-
-
-            }
-
-
             if (msg[0].equalsIgnoreCase("!mute")) {
                 if (msg.length > 1)
                 {
@@ -113,17 +90,12 @@ public class Staff extends ListenerAdapter
                     long userId = user.getUser().getIdLong();
                     Member mem = event.getGuild().getMemberById(userId);
                     Role role = event.getGuild().getRolesByName("MUTE", true).get(0);
-
-
-
                     guild.getController().addSingleRoleToMember(mem, role).queue();
                     //event.getChannel().sendMessage(role + "").queue();
 
                 }
 
             }
-
-
             if (msg[0].equalsIgnoreCase("!temp")) {
                 if (msg.length > 1)
                 {
@@ -134,9 +106,7 @@ public class Staff extends ListenerAdapter
                         event.getChannel().sendMessage(logMessage).queue();
                     }
                 }
-
             }
-
 
             if (msg[0].equalsIgnoreCase("!kick")) {
 
@@ -151,9 +121,7 @@ public class Staff extends ListenerAdapter
                 } else {
                     event.getChannel().sendMessage("PLEASE PROVIDE A NAME").queue();
                 }
-
             }
-
 
             if (msg[0].equalsIgnoreCase("!info+")) {
 
@@ -210,16 +178,9 @@ public class Staff extends ListenerAdapter
                 }
 
                 event.getChannel().sendMessage(embed.build()).queue();
-
             }
-
         }
-
-
-
-
     }
-
 
     public void onGuildVoiceMute(GuildVoiceMuteEvent event) {
         if (event.isMuted()) {

@@ -23,15 +23,6 @@ public class Bot {
         jda.addEventListener(new Staff());
         jda.addEventListener(new Admin());
 
-
-
-
-
-
     }
-
-
-
-
 }
 

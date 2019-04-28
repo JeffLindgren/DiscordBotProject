@@ -1,18 +1,24 @@
 package events;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.api.JDA;
 
+
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.format.DateTimeFormatter;
+
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 
 public class Basic extends ListenerAdapter
@@ -20,26 +26,345 @@ public class Basic extends ListenerAdapter
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         String[] msg = event.getMessage().getContentRaw().split(" ");
         Member member = event.getMember();
-
         Guild guild = event.getGuild();
-
-
         Member test;
         Member user;
+
+        boolean status = true;
 
         //ping
         if (msg[0].equalsIgnoreCase("!ping")) {
             String re = "Ping: `" + event.getJDA().getGatewayPing() + "ms` " + ((Member) member).getAsMention();
             event.getChannel().sendMessage(re).queue();
+
+
+        }
+
+        //Live notifications
+
+        if (msg[0].equalsIgnoreCase("!live") && event.getMember().hasPermission(Permission.ADMINISTRATOR))
+        {
+            while (true)
+            {
+
+
+                try {
+                    String url = "https://api.twitch.tv/kraken/streams/vader?client_id=077cnffgasxn3hk2mlaiqk2gx0d9j1";
+                    URL obj = new URL(url);
+                    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+
+
+                    con.setRequestMethod("GET");
+
+                    con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+                    int responseCode = con.getResponseCode();
+                    System.out.println("\nSending get request to: " + url);
+                    System.out.println("Code: " + responseCode);
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    String inputLine;
+                    StringBuffer response = new StringBuffer();
+                    while ((inputLine = in.readLine()) != null){
+                        response.append(inputLine);
+                    }
+
+                    in.close();
+
+                    System.out.println(response.toString());
+
+                    JSONObject myResponse = new JSONObject(response.toString());
+
+                    if (myResponse.get("stream") != null && status == true)
+                    {
+                        //event.getChannel().sendMessage("TEST").queue();
+                        EmbedBuilder embed = new EmbedBuilder()
+                                .setColor(Color.RED)
+                                .setDescription(myResponse.getJSONObject("stream").getJSONObject("channel").getString("display_name"))
+                                .addField("Title:", myResponse.getJSONObject("stream").getJSONObject("channel").getString("status"), true)
+                                .addField("Game:", myResponse.getJSONObject("stream").getJSONObject("channel").getString("game"),true)
+                                .addField("Language:", myResponse.getJSONObject("stream").getJSONObject("channel").getString("language"), true)
+                                .addField("Viewers:", myResponse.getJSONObject("stream").get("viewers").toString(), true)
+                                .addField("URL:", "https://www.twitch.tv/", true)
+                                .setThumbnail(myResponse.getJSONObject("stream").getJSONObject("channel").getString("logo"))
+                                .setImage(myResponse.getJSONObject("stream").getJSONObject("preview").getString("large"));
+
+
+                        event.getChannel().sendMessage(embed.build()).queue();
+                        event.getChannel().sendMessage("@everyone").queue();
+                        status = false;
+                        System.out.println("Streamer is live");
+
+                    } else if(myResponse.getJSONArray("stream") != null && status == false){
+                        System.out.println("Streamer is live");
+                    }
+
+                    else
+                    {
+                        System.out.println("NOT LIVE");
+                        status = true;
+                    }
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    Thread.sleep(500000);
+                } catch (Exception e) {}
+
+
+            }
+        }
+
+        //event.getChannel().sendMessage(event.getMessage().toString()).queue();
+
+        if (msg[0].equalsIgnoreCase("!twitch"))
+        {
+            if (msg.length == 1)
+            {
+                event.getChannel().sendMessage("Please provide a Twitch name!").queue();
+            }
+
+            if (msg.length == 2)
+            {
+
+                try {
+                    String url = "https://api.twitch.tv/kraken/channels/"+ msg[1]+"?client_id=077cnffgasxn3hk2mlaiqk2gx0d9j1";
+                    URL obj = new URL(url);
+                    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+
+
+                    con.setRequestMethod("GET");
+
+                    con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+                    int responseCode = con.getResponseCode();
+                    System.out.println("\nSending get request to: " + url);
+                    System.out.println("Code: " + responseCode);
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    String inputLine;
+                    StringBuffer response = new StringBuffer();
+                    while ((inputLine = in.readLine()) != null){
+                        response.append(inputLine);
+                    }
+
+                    in.close();
+
+                    System.out.println(response.toString());
+
+                    JSONObject myResponse = new JSONObject(response.toString());
+
+                    EmbedBuilder embed = new EmbedBuilder()
+                            .setColor(Color.RED)
+                            .setDescription(myResponse.getString("display_name"))
+                            .addField("Title:", myResponse.getString("status"), true)
+                            .addField("Game:", myResponse.getString("game"),true)
+                            .addField("Language:", myResponse.getString("language"), true)
+                            .addField("Total view:", myResponse.get("views").toString(), true)
+                            .addField("Followers:", myResponse.get("followers").toString(), true)
+                            .addField("created_at", myResponse.getString("created_at"), true)
+                            .addField("URL:", "https://www.twitch.tv/" + msg[1], true)
+                            .setThumbnail(myResponse.getString("logo"))
+                            .setImage(myResponse.getString("video_banner"));
+
+
+                    event.getChannel().sendMessage(embed.build()).queue();
+
+
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+        if (msg[0].equalsIgnoreCase("-ytStat"))
+        {
+
+
+            if (msg.length == 1)
+            {
+                event.getChannel().sendMessage("Please provide a link!").queue();
+            }
+
+            if (msg.length == 3)
+            {
+                //Nothing
+            }
+
+            if (msg.length == 2)
+            {
+                String[] code = msg[1].split("v=");
+                try {
+                    String url = "https://www.googleapis.com/youtube/v3/videos?id="+ code[1]  +"&key=AIzaSyC_nF4W7XKnCRYufB89ZGT5K2CU-k-FHfo&part=statistics,snippet";
+                    URL obj = new URL(url);
+                    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+
+
+                    con.setRequestMethod("GET");
+
+                    con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+                    int responseCode = con.getResponseCode();
+                    System.out.println("\nSending get request to: " + url);
+                    System.out.println("Code: " + responseCode);
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    String inputLine;
+                    StringBuffer response = new StringBuffer();
+                    while ((inputLine = in.readLine()) != null){
+                        response.append(inputLine);
+                    }
+
+                    in.close();
+
+                    System.out.println(response.toString());
+
+                    JSONObject myResponse = new JSONObject(response.toString());
+
+                    //JSONArray itemsArray = new JSONArray(myResponse.optJSONArray("items"));
+
+                    JSONArray items = new JSONArray(myResponse.getJSONArray("items").toString());
+
+                    System.out.println("HI: "+ items);
+                    items.toString();
+                    JSONObject stat = new JSONObject(items.getJSONObject(0).get("statistics").toString());
+                    JSONObject snip = new JSONObject(items.getJSONObject(0).get("snippet").toString());
+                    System.out.println("TEST: " + stat);
+
+                    //JSONObject videoInfo = new JSONObject(myResponse.getString("items"));
+                    //System.out.println("Location :" + myResponse.getString("name"));
+                    EmbedBuilder embed = new EmbedBuilder()
+                            .setColor(Color.green)
+                            .addField("Views:", stat.getString("viewCount"),false)
+                            .addField("Likes:", stat.getString("likeCount"), true)
+                            .addField("Dislikes", stat.getString("dislikeCount"), true)
+                            .addField("Number of comments:", stat.getString("commentCount"), true)
+                            .addField("Published:", snip.getString("publishedAt"), true)
+                            .addField("Description:", snip.getString("description").substring(0, 100) + " ...", false)
+                            .setImage(snip.getJSONObject("thumbnails").getJSONObject("standard").getString("url"))
+                            .setDescription("YouTube stats for " + snip.getString("title"));
+
+                    event.getChannel().sendMessage(embed.build()).queue();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        //https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=91SyPGgELiU&format=json
+        //Working url thing
+        //https://www.googleapis.com/youtube/v3/videos?id=C0DPdy98e4c&key=AIzaSyDsbFsdH2GR4Ur05IpfsP3565WGZWvIqpU&part=statistics
+        //https://www.googleapis.com/youtube/v3/videos?id=C0DPdy98e4c&key=AIzaSyDsbFsdH2GR4Ur05IpfsP3565WGZWvIqpU&part=statistics
+        //api.openweathermap.org/data/2.5/weather?zip=94040,us
+        //http://api.openweathermap.org/data/2.5/weather?zip=94040,us&appid=32ff9631e6a7a4d1e354d92af3ec01a3
+
+        if (msg[0].equalsIgnoreCase("!weather"))
+        {
+            if (msg.length == 1)
+            {
+                event.getChannel().sendMessage("Please provide a zip code!").queue();
+            }
+            if (msg.length == 2)
+            {
+                try {
+                    String url = "http://api.openweathermap.org/data/2.5/weather?zip="+ msg[1]+ ",us&appid=32ff9631e6a7a4d1e354d92af3ec01a3";
+                    URL obj = new URL(url);
+                    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+
+
+                    con.setRequestMethod("GET");
+
+                    con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+                    int responseCode = con.getResponseCode();
+                    System.out.println("\nSending get request to: " + url);
+                    System.out.println("Code: " + responseCode);
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    String inputLine;
+                    StringBuffer response = new StringBuffer();
+                    while ((inputLine = in.readLine()) != null){
+                        response.append(inputLine);
+                    }
+
+                    in.close();
+
+                    System.out.println(response.toString());
+
+                    JSONObject myResponse = new JSONObject(response.toString());
+                    //System.out.println("Location :" + myResponse.getString("name"));
+                    EmbedBuilder embed = new EmbedBuilder()
+                            .setColor(Color.green)
+                            .setDescription("Weather for " + myResponse.getString("name"))
+                            .addField("Location", myResponse.getString("name"), false)
+                            .addField("Wind", myResponse.getJSONObject("wind").toString(), true)
+                            .addField("Pressure", myResponse.getJSONObject("main").toString(), true)
+                            .addField("Visibility", myResponse.get("visibility").toString(), true);
+                    event.getChannel().sendMessage(embed.build()).queue();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         if (msg[0].equalsIgnoreCase("!website")) {
             event.getChannel().sendMessage("http://www.jefflindgren.me").queue();
         }
 
+        if (msg[0].equalsIgnoreCase("!av")) {
+            String userURL = "";
+            if (msg.length == 1)
+            {
+                userURL = event.getMember().getUser().getAvatarUrl();
+
+            } if (msg.length == 2){
+                if (event.getMessage().getMentionedUsers().size() == 1)
+                {
+                    userURL = event.getMessage().getMentionedUsers().get(0).getAvatarUrl();
+                }
+
+            }
+
+            EmbedBuilder embed = new EmbedBuilder()
+                    .setColor(Color.cyan)
+                    .setImage(userURL);
+            event.getChannel().sendMessage(embed.build()).queue();
+        }
+
         if (msg[0].equalsIgnoreCase("!members")) {
             int size = event.getGuild().getMembers().size();
             event.getChannel().sendMessage("`" +size + "` Total members").queue();
+        }
+
+        if (msg[0].equalsIgnoreCase("!enlarge") || msg[0].equalsIgnoreCase("!en")) {
+
+            if (event.getMessage().getEmotes().size() == 0)
+            {
+
+            } else {
+                Emote emote = event.getMessage().getEmotes().get(0);
+                //emote.getAsMention();
+                EmbedBuilder embed = new EmbedBuilder()
+                        .setColor(Color.cyan)
+                        .setDescription(emote.getAsMention())
+                        .setImage(emote.getImageUrl());
+                event.getChannel().sendMessage(embed.build()).queue();
+            }
+
         }
 
 
@@ -62,10 +387,7 @@ public class Basic extends ListenerAdapter
             embed.setThumbnail("https://cdn.discordapp.com/avatars/539305238423928854/4d372140d87bb94d3f22d2e41bfe5c8c.png");
 
             event.getChannel().sendMessage(embed.build()).queue();
-
         }
-
-
 
         if (msg[0].equalsIgnoreCase("!rules")) {
             EmbedBuilder embed = new EmbedBuilder()
@@ -87,8 +409,6 @@ public class Basic extends ListenerAdapter
             event.getChannel().sendMessage(embed.build()).queue();
 
         }
-
-
         if (msg[0].equalsIgnoreCase("!8ball")) {
             if (msg.length < 2)
             {
@@ -125,9 +445,7 @@ public class Basic extends ListenerAdapter
 
                 event.getChannel().sendMessage(event.getMember().getAsMention() + " " + x).queue();
             }
-
         }
-
 
         if (msg[0].equalsIgnoreCase("!roast")) {
             if (msg.length < 2)
@@ -176,12 +494,7 @@ public class Basic extends ListenerAdapter
 
                 event.getChannel().sendMessage(x + " " + msg[1]).queue();
             }
-
-
         }
-
-
-
         if (msg[0].equalsIgnoreCase("!gif")) {
 
             int magic = (int) Math.ceil(Math.random() * 10);
@@ -227,12 +540,7 @@ public class Basic extends ListenerAdapter
 
 
             event.getChannel().sendMessage(x).queue();
-
-
-
         }
-
-
 
         if (msg[0].equalsIgnoreCase("!help"))
         {
@@ -251,8 +559,6 @@ public class Basic extends ListenerAdapter
             event.getChannel().sendMessage(embed.build()).queue();
 
         }
-
-
 
         //info
         if (msg[0].equalsIgnoreCase("!info")) {
@@ -308,15 +614,8 @@ public class Basic extends ListenerAdapter
             }
 
             event.getChannel().sendMessage(embed.build()).queue();
-
         }
-
-
-
     }
-
-
-
 
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
         JDA jda = event.getJDA();

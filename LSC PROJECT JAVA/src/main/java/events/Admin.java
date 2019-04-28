@@ -8,11 +8,19 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.awt.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+
+
 
 public class Admin extends ListenerAdapter {
 
@@ -25,8 +33,49 @@ public class Admin extends ListenerAdapter {
 
         if (event.getMember().hasPermission(Permission.BAN_MEMBERS))
         {
-            if (msg[0].equalsIgnoreCase("!role"))
+            if (msg[0].equalsIgnoreCase("!loadrole") && member.hasPermission(Permission.ADMINISTRATOR))
             {
+
+                try {
+                    String url = "https://api.myjson.com/bins/1dtqik";
+                    URL obj = new URL(url);
+                    HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+                    con.setRequestMethod("GET");
+
+                    con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+                    int responseCode = con.getResponseCode();
+                    System.out.println("\nSending get request to: " + url);
+                    System.out.println("Code: " + responseCode);
+
+                    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    String inputLine;
+                    StringBuffer response = new StringBuffer();
+                    while ((inputLine = in.readLine()) != null){
+                        response.append(inputLine);
+                    }
+                    in.close();
+                    System.out.println(response.toString());
+                    JSONObject roles = new JSONObject(response.toString());
+
+                    //JSON roles = new JSONArray((response.toString()));
+
+                    String color = roles.getJSONArray("roles").getJSONObject(0).getJSONObject(msg[1]).getString("color");
+                    Boolean men = roles.getJSONArray("roles").getJSONObject(0).getJSONObject(msg[1]).getBoolean("men");
+
+
+
+                    event.getGuild().getController().createRole().setColor(Color.cyan).setName(msg[2]).setMentionable(men).queue();
+                    event.getChannel().sendMessage("Loaded").queue();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                //event.getGuild().getController().createRole().setColor(Color.GREEN).setName(msg[2]).setMentionable(true).setPermissions().queue();
+
+
 
             }
 
@@ -45,7 +94,7 @@ public class Admin extends ListenerAdapter {
 
 
                     guild.getController().addSingleRoleToMember(mem, role).queue();
-                    //event.getChannel().sendMessage(role + "").queue();
+                    event.getChannel().sendMessage(role.getName() + " Has been added to " + mem.getUser().getAsMention()).queue();
 
                 }
 
@@ -62,21 +111,12 @@ public class Admin extends ListenerAdapter {
                     long userId = user.getUser().getIdLong();
                     Member mem = event.getGuild().getMemberById(userId);
                     Role role = event.getMessage().getMentionedRoles().get(0);
-
-
-
-                    //NEED TO FIX THIS
-
-
-
-                    guild.getController().removeSingleRoleFromMember(mem, role);
-                    //event.getChannel().sendMessage(role + "").queue();
+                    guild.getController().removeSingleRoleFromMember(mem, role).queue();
+                    event.getChannel().sendMessage(role.getName() + " Has been removed from " + mem.getUser().getAsMention()).queue();
 
                 }
 
             }
-
-
             if (msg[0].equalsIgnoreCase("!setnick"))
             {
                 if (msg.length > 2) {
@@ -84,14 +124,9 @@ public class Admin extends ListenerAdapter {
                 } else {
                     test = ((Guild) guild).getMember(event.getMember().getUser());
                 }
-
-
-
                 String newName = msg[msg.length - 1];
                 event.getGuild().getController().setNickname(test, msg[2]).queue();
                 event.getChannel().sendMessage("CHANGED").queue();
-
-
             }
 
 
@@ -133,7 +168,7 @@ public class Admin extends ListenerAdapter {
                 if (AVATAR == null) {
                     AVATAR = "No avatar";
                 }
-                for (Role role : member.getRoles()) {
+                for (Role role : test.getRoles()) {
                     ROLES += role.getName() + ", ";
                 }
                 if (ROLES.length() > 0) {
@@ -165,12 +200,8 @@ public class Admin extends ListenerAdapter {
 
 
                 }
-
                 event.getChannel().sendMessage(embed.build()).queue();
-
-
             }
-
 
             if (msg[0].equalsIgnoreCase("!rank"))
             {
@@ -193,9 +224,6 @@ public class Admin extends ListenerAdapter {
             {
 
 
-
-                //String role = event.getMessage().getMentionedRoles().get(0).toString();
-
                 if (event.getJDA().getRoleById("564604461503217723").hasPermission(Permission.MESSAGE_WRITE))
                 {
                     guild.getRolesByName("MEMBER", true).get(0).getPermissions().remove(Permission.MESSAGE_WRITE);
@@ -208,23 +236,14 @@ public class Admin extends ListenerAdapter {
                 }
 
             }
-
-
-
             if (msg[0].equalsIgnoreCase("!admins"))
             {
-                if (msg.length > 1)
+                if (true)
                 {
-                    Role role = event.getMessage().getMentionedRoles().get(0);
+                    Role role = guild.getRolesByName("ADMIN", true).get(0);
                     String listStaff = "";
-                    //String te = "R:Admin(560519529592127488)";
 
-
-                    System.out.println(role);
-                    int x;
-
-
-                    List<Member> test1 = event.getGuild().getMembersWithRoles();
+                    List<Member> test1 = event.getGuild().getMembersWithRoles(role);
 
 
                     event.getChannel().sendMessage(Arrays.toString(test1.toArray())).queue();
@@ -234,11 +253,7 @@ public class Admin extends ListenerAdapter {
 
             if (msg[0].equalsIgnoreCase("!createrole"))
             {
-                //Role role;
-
-                event.getGuild().getController().createRole().setColor(Color.GREEN).setName(msg[1]).setMentionable(true).queue();
-
-
+              event.getGuild().getController().createRole().setColor(Color.GREEN).setName(msg[1]).setMentionable(true).queue();
             }
 
 
@@ -247,8 +262,6 @@ public class Admin extends ListenerAdapter {
                 Role role = event.getMessage().getMentionedRoles().get(0);
                 role.delete().queue();
                 event.getGuild().getTextChannelById("561728191845236742").sendMessage(role.getName() + " has beened removed from the server").queue();
-
-
             }
 
             if (msg[0].equalsIgnoreCase("!ban"))
@@ -264,9 +277,6 @@ public class Admin extends ListenerAdapter {
                 }
 
             }
-
-
-
 
             if (msg[0].equalsIgnoreCase("!default"))
             {
@@ -289,14 +299,7 @@ public class Admin extends ListenerAdapter {
                     //event.getChannel().sendMessage(role + "").queue();
 
                 }
-
-
             }
-
-
-
-
         }
-
     }
 }
